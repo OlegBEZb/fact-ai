@@ -2,6 +2,7 @@ from sklearn.decomposition import PCA
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import itertools
 
 from word_embedding import download_word2vec, create_vocabulary
 
@@ -24,14 +25,16 @@ def create_bias_subspace(word_embedding, X, Y, shuffle=False):
 
     if not len(X) == len(Y):
         print('Error: expected paired seed words, but received sets of different sizes')
+        return None
 
     if shuffle:
-        random.shuffle(Y)
+        #When shuffle is set to True, consider all possible pairings between the seeds
+        pairs = list(itertools.product(X, Y))
+    else:
+        pairs = list(zip(X, Y))
 
     halves = []
-    for i in range(len(X)):
-        x, y = X[i], Y[i]
-
+    for x, y in pairs:
         #Only use pairs when both are present in the word embeddings
         try:
             embed_x = word_embedding[x]
@@ -55,11 +58,10 @@ def create_bias_subspace(word_embedding, X, Y, shuffle=False):
 
     return pca
 
-if __name__ == '__main__':
-    download_word2vec()
-    word_embedding = create_vocabulary()
-
-    #Run two PCA
+def plot():
+    """Plot explained variance of each component of the PCA subset of various
+    shuffled and unshuffled seed pairs, as described in figure 3 of the bad seeds paper
+    """
     # Seeds from Bolukbasi et al. (2016)
     X = ['woman', 'girl', 'she', 'gal', 'mother', 'daughter', 'female', 'her', 'herself', 'Mary']
     Y = ['man', 'boy', 'he', 'guy', 'father', 'son', 'male', 'his', 'himself', 'John']
@@ -78,8 +80,17 @@ if __name__ == '__main__':
     pca = create_bias_subspace(word_embedding, X, Y, shuffle=True)
     EV_social_class_random = pca.explained_variance_ratio_
 
+    # Seeds from Garg et al. (2018)
+    X = ['cho', 'wong', 'tang', 'huang', 'chu', 'chung', 'ng', 'wu', 'liu', 'chen', 'lin', 'yang', 'kim', 'chang', 'shah', 'wang', 'li', 'khan', 'singh', 'hong']
+    Y = ['ruiz', 'alvarez', 'vargas', 'castillo', 'gomez', 'soto', 'gonzalez', 'sanchez', 'rivera', 'mendoza', 'martinez', 'torres', 'rodriguez', 'perez', 'lopez', 'medina', 'diaz', 'garcia', 'castro', 'cruz']
+    pca = create_bias_subspace(word_embedding, X, Y)
+    EV_names_order = pca.explained_variance_ratio_
+
+    pca = create_bias_subspace(word_embedding, X, Y, shuffle=True)
+    EV_names_random = pca.explained_variance_ratio_
+
     #Plot PCA components
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(6,3))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(8,3))
 
     gender_data = [EV_gender_order[0:10], EV_gender_random[0:10]]
     X = np.arange(10)
@@ -95,4 +106,17 @@ if __name__ == '__main__':
     ax2.bar(X + 0.3, social_data[1], color = 'g', width = 0.3, label='shuffled')
     ax2.legend()
     ax2.set_title('Social Class Pairs')
+
+    X = np.arange(10)
+    names_data = [EV_names_order[0:10], EV_names_random[0:10]]
+
+    ax3.bar(X + 0.0, names_data[0], color = 'b', width = 0.3, label='original order')
+    ax3.bar(X + 0.3, names_data[1], color = 'g', width = 0.3, label='shuffled')
+    ax3.legend()
+    ax3.set_title('Chinese-Hispanic Name Pairs')
     plt.show()
+
+if __name__ == '__main__':
+    download_word2vec()
+    word_embedding = create_vocabulary()
+    plot()
