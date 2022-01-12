@@ -15,3 +15,5 @@ A repository for the FACT-AI course at the UvA. Contains the reproduction of the
 5. Optional
    1. Train the model for each of the datasets (Oleg)
    2. Mimic the plot styles
+   3. Check the situation for the recent models like transformers and so on
+   4. Expand the analysis with other biases like age, citizenship, occupation, orientation
