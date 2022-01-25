@@ -5,12 +5,14 @@ import spacy
 from spacy.tokens import DocBin
 from collections import Counter
 from tqdm import tqdm
-import pickle
+# import pickle
+import pickle5 as pickle
+
 # import datetime
 # from pynytimes import NYTAPI
 import os
 
-nyt = NYTAPI("xdAb2YGzt44pk62Pug6W0AOrKgEidCga", parse_dates=True)
+# nyt = NYTAPI("xdAb2YGzt44pk62Pug6W0AOrKgEidCga", parse_dates=True)
 
 # Only use the PoS tagger, or processing will take very long
 nlp = spacy.load('en_core_web_sm', disable=[
@@ -33,7 +35,7 @@ MIN_TOKEN_FREQ = 10
 
 def preprocess(dataset, doc_bin_filename, doc_bin_size=50000):
 
-    # Split raw text dataset into individual lines 
+    # Split raw text dataset into individual lines
     lines = dataset.splitlines()
 
     # Lowercase
@@ -59,22 +61,22 @@ def preprocess(dataset, doc_bin_filename, doc_bin_size=50000):
             iter = 0
             doc_bin = DocBin(store_user_data=True)
 
- 
-def tokens_from_serialized_docs(dataset_name):
+
+def tokens_from_serialized_docs(dataset_path):
 
     # Accumulate unigram POS tags
     doc_tokens = []
     text_tokens = []
 
     # Read all parts of the docs
-    filenames = os.listdir('./preprocessed')
+    filenames = os.listdir(dataset_path)
     filenames.sort()
     print(filenames)
     print('Processing files...')
     for filename in tqdm(filenames):
 
         # Read docs with tokens
-        with open(f'./preprocessed/{filename}', 'rb') as handle:
+        with open(os.path.join(dataset_path, filename), 'rb') as handle:
             # print('Loading docs...')
             doc_bin = pickle.load(handle)
             docs = list(doc_bin.get_docs(nlp.vocab))
@@ -124,7 +126,7 @@ if __name__ == '__main__':
     # wikitext103_data = pardata.load_dataset('wikitext103')
     # print('done')
     # preprocess(wikitext103_data['train'], 'wikitext')
-    
+
     tokens = tokens_from_serialized_docs('wikitext')
     print(f'Sample token: \nText: {tokens[40].text} \nPoS tag: {tokens[40].tag_}')
 
